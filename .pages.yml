@@ -1,0 +1,117 @@
+# Pages CMS configuration: https://app.pagescms.org
+# This controls the web editor you use to upload art and edit text from a browser or phone.
+
+media:
+  input: src/art
+  output: /src/art
+  categories: [image]
+  rename: safe
+
+content:
+  - name: artworks
+    label: Artwork details
+    description: >
+      Optional extra details for a piece. Any image uploaded to Media appears on the
+      site automatically; add an entry here only for a title, medium, your notes,
+      or to feature/hide it.
+    type: collection
+    path: src/content/artworks
+    format: yaml-frontmatter
+    filename: "{primary}.md"
+    view:
+      primary: title
+      fields: [title, image, date, featured]
+      sort: date
+      order: desc
+    fields:
+      - name: image
+        label: Image
+        type: image
+        required: true
+      - name: title
+        label: Title
+        type: string
+        required: true
+      - name: date
+        label: Date made
+        type: date
+        description: Only the year is shown on the site. Used to order the gallery (newest first).
+      - name: medium
+        label: Medium
+        type: string
+        description: e.g. Oil on canvas
+      - name: size
+        label: Size
+        type: string
+        description: e.g. 40 × 50 cm
+      - name: description
+        label: Short description (shown beside the image)
+        type: text
+      - name: featured
+        label: Featured (show in the big carousel on the home page and first in the gallery)
+        type: boolean
+      - name: order
+        label: Order
+        type: number
+        description: Optional. Lower numbers come first (e.g. 1 = first slide in the carousel).
+      - name: excerpt
+        label: Carousel quote
+        type: text
+        description: Optional. A sentence or two shown in the carousel. If empty, the start of your notes is used.
+      - name: body
+        label: Artist's notes (the story behind it)
+        type: rich-text
+        description: Your thoughts on this piece. Shown on its page under "The story behind it". Leave empty for no notes.
+      - name: sold
+        label: Sold
+        type: boolean
+      - name: hidden
+        label: Hidden (keep the file but don't show it)
+        type: boolean
+
+  - name: about
+    label: About page
+    type: file
+    path: src/content/pages/about.md
+    format: yaml-frontmatter
+    fields:
+      - name: title
+        label: Page title
+        type: string
+        required: true
+      - name: body
+        label: Text
+        type: rich-text
+
+  - name: site
+    label: Site settings
+    type: file
+    path: src/data/site.json
+    format: json
+    fields:
+      - name: name
+        label: Artist name
+        type: string
+        required: true
+      - name: tagline
+        label: Tagline (under your name)
+        type: string
+      - name: description
+        label: Search engine description
+        type: text
+      - name: email
+        label: Contact email
+        type: string
+      - name: instagram
+        label: Instagram URL
+        type: string
+        description: Full link, e.g. https://instagram.com/yourname
+      - name: otherLinks
+        label: Other links
+        type: object
+        list: true
+        fields:
+          - name: label
+            type: string
+          - name: url
+            type: string

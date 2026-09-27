@@ -1,0 +1,176 @@
+---
+// Big slideshow of featured pieces at the top of the home page.
+// A piece appears here when "featured: true" is set in its details file.
+// Shows the carousel quote (or the start of the artist's notes) and a link to the full story.
+import { Image, getImage } from 'astro:assets';
+import { formatYear, type Artwork } from '../lib/artworks';
+
+interface Props {
+  artworks: Artwork[];
+}
+
+const { artworks } = Astro.props;
+const slides = await Promise.all(
+  artworks.map(async (art) => ({
+    art,
+    // Tiny blurred copy used as a soft coloured backdrop behind each slide
+    backdrop: await getImage({ src: art.image, width: 48, format: 'webp' }),
+  })),
+);
+---
+
+{
+  slides.length > 0 && (
+    <section class="carousel relative mb-16" aria-roledescription="carousel" aria-label="Featured work">
+      <div class="carousel-track flex snap-x snap-mandatory overflow-x-auto scroll-smooth" tabindex="0">
+        {slides.map(({ art, backdrop }, i) => (
+          <article
+            class="carousel-slide relative w-full shrink-0 snap-center overflow-hidden rounded-[2rem] bg-surface"
+            aria-roledescription="slide"
+            aria-label={`${i + 1} of ${slides.length}: ${art.title}`}
+          >
+            <div
+              class="absolute inset-0 scale-125 bg-cover bg-center opacity-50 blur-3xl dark:opacity-35"
+              style={`background-image:url(${backdrop.src})`}
+              aria-hidden="true"
+            />
+            <div class="relative grid items-center gap-6 p-5 sm:p-8 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-10 md:p-12">
+              <a href={`/art/${art.slug}/`} class="arch mx-auto block w-fit bg-page/70 px-3 pt-16 pb-3 shadow-xl backdrop-blur-sm sm:px-4 sm:pb-4">
+                <Image
+                  src={art.image}
+                  alt={art.title}
+                  widths={[500, 800, 1100]}
+                  sizes="(min-width: 768px) 560px, 88vw"
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  class="h-auto max-h-[58vh] w-auto rounded-sm object-contain md:max-h-[66vh]"
+                />
+              </a>
+              <div class="text-center md:text-left">
+                <p class="text-xs tracking-[0.3em] text-accent-2 uppercase">Featured</p>
+                <h2 class="mt-2 text-4xl leading-tight font-semibold italic sm:text-5xl">{art.title}</h2>
+                {(art.medium || art.date) && (
+                  <p class="mt-2 text-sm tracking-wider text-muted uppercase">
+                    {[art.medium, formatYear(art.date)].filter(Boolean).join(' · ')}
+                  </p>
+                )}
+                {art.excerpt && (
+                  <blockquote class="relative mt-6 font-display text-xl leading-relaxed text-text/90 italic sm:text-2xl">
+                    <span class="absolute -top-6 -left-2 font-display text-7xl leading-none text-marigold/70 not-italic select-none md:-left-6" aria-hidden="true">“</span>
+                    <p class="relative">{art.excerpt}</p>
+                  </blockquote>
+                )}
+                <a
+                  href={`/art/${art.slug}/`}
+                  class="mt-8 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm tracking-wide text-page no-underline shadow-md transition hover:bg-accent-2"
+                >
+                  {art.hasNotes ? 'Read the story behind it' : 'View this piece'} <span aria-hidden="true">→</span>
+                </a>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {slides.length > 1 && (
+        <div class="mt-5 flex items-center justify-center gap-5">
+          <button type="button" class="carousel-prev carousel-btn" aria-label="Previous">
+            <span aria-hidden="true">←</span>
+          </button>
+          <div class="flex gap-2">
+            {slides.map(({ art }, i) => (
+              <button
+                type="button"
+                class="carousel-dot h-2.5 w-2.5 rounded-full bg-muted/40 transition-all"
+                aria-label={`Show ${art.title}`}
+                data-index={i}
+              />
+            ))}
+          </div>
+          <button type="button" class="carousel-next carousel-btn" aria-label="Next">
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      )}
+    </section>
+  )
+}
+
+<style>
+  .carousel-track {
+    scrollbar-width: none;
+  }
+  .carousel-track::-webkit-scrollbar {
+    display: none;
+  }
+  .carousel-track {
+    gap: 1.5rem;
+  }
+  .carousel-btn {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 999px;
+    border: 2px solid var(--color-accent);
+    color: var(--color-accent);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+  .carousel-btn:hover {
+    background: var(--color-accent);
+    color: var(--color-page);
+  }
+  :global(.carousel-dot[aria-current='true']) {
+    width: 1.75rem;
+    background: var(--color-accent-2);
+  }
+  .carousel-dot {
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('.carousel')) {
+    const track = root.querySelector<HTMLElement>('.carousel-track')!;
+    const slides = [...root.querySelectorAll<HTMLElement>('.carousel-slide')];
+    const dots = [...root.querySelectorAll<HTMLButtonElement>('.carousel-dot')];
+    if (slides.length < 2) continue;
+
+    const current = () => Math.round(track.scrollLeft / (slides[0].offsetWidth + 24));
+    const go = (i: number) => {
+      const n = (i + slides.length) % slides.length;
+      track.scrollTo({ left: slides[n].offsetLeft - track.offsetLeft, behavior: 'smooth' });
+    };
+    const update = () => dots.forEach((d, i) => d.setAttribute('aria-current', String(i === current())));
+
+    root.querySelector('.carousel-prev')?.addEventListener('click', () => { stop(); go(current() - 1); });
+    root.querySelector('.carousel-next')?.addEventListener('click', () => { stop(); go(current() + 1); });
+    dots.forEach((d, i) => d.addEventListener('click', () => { stop(); go(i); }));
+    track.addEventListener('scroll', update, { passive: true });
+    track.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') { stop(); go(current() + 1); e.preventDefault(); }
+      if (e.key === 'ArrowLeft') { stop(); go(current() - 1); e.preventDefault(); }
+    });
+    update();
+
+    // Gentle auto-advance. Stops for good once someone interacts,
+    // pauses while hovered, and is off for people who prefer reduced motion.
+    let timer: number | undefined;
+    let paused = false;
+    function stop() {
+      window.clearInterval(timer);
+      timer = undefined;
+    }
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      timer = window.setInterval(() => { if (!paused) go(current() + 1); }, 7000);
+      root.addEventListener('mouseenter', () => (paused = true));
+      root.addEventListener('mouseleave', () => (paused = false));
+      root.addEventListener('focusin', () => (paused = true));
+      track.addEventListener('touchstart', stop, { passive: true });
+      track.addEventListener('wheel', (e) => { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) stop(); }, { passive: true });
+    }
+  }
+</script>

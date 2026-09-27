@@ -1,0 +1,21 @@
+---
+// Colourful bunting strip across the top of the page (inspired by papel picado).
+const colors = [
+  'var(--color-magenta)',
+  'var(--color-marigold)',
+  'var(--color-cobalt)',
+  'var(--color-emerald)',
+  'var(--color-terracotta)',
+];
+const flags = Array.from({ length: 40 }, (_, i) => colors[i % colors.length]);
+---
+
+<div class="flex h-3 w-full overflow-hidden" aria-hidden="true">
+  {
+    flags.map((c) => (
+      <svg class="h-3 min-w-10 flex-1" viewBox="0 0 40 12" preserveAspectRatio="none">
+        <path d="M0 0 H40 V7 L30 12 L20 7 L10 12 L0 7Z" fill={c} />
+      </svg>
+    ))
+  }
+</div>

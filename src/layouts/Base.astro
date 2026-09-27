@@ -1,0 +1,128 @@
+---
+// The frame around every page: header, navigation and footer.
+// The name, tagline and contact links come from src/data/site.json.
+import '../styles/global.css';
+import site from '../data/site.json';
+import Ornament from '../components/Ornament.astro';
+import PapelPicado from '../components/PapelPicado.astro';
+import Wave from '../components/Wave.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Root-relative or absolute URL of an image used when the page is shared */
+  image?: string;
+}
+
+const { title, description = site.description, image } = Astro.props;
+const pageTitle = title ? `${title} · ${site.name}` : `${site.name} · ${site.tagline}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = image ? new URL(image, Astro.site).href : undefined;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const nav = [
+  { href: '/', label: 'Gallery', match: (p: string) => p === '/' || p.startsWith('/art') },
+  { href: '/about/', label: 'About', match: (p: string) => p.startsWith('/about') },
+];
+const otherLinks: { label: string; url: string }[] = site.otherLinks ?? [];
+const year = new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <!-- Ask AI companies not to train on this site's text or images (see also public/robots.txt) -->
+    <meta name="robots" content="noai, noimageai" />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    <meta name="theme-color" content="#f4ede2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1c1714" media="(prefers-color-scheme: dark)" />
+  </head>
+  <body class="flex min-h-dvh flex-col">
+    <PapelPicado />
+    <header class="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 pt-10 pb-8 sm:px-6">
+      <a href="/" class="text-center no-underline">
+        <span class="block font-display text-4xl font-semibold tracking-tight text-text sm:text-5xl">{site.name}</span>
+        <span class="mt-1 block font-display text-lg text-muted italic">{site.tagline}</span>
+      </a>
+      <Ornament class="h-8 w-28" />
+      <nav aria-label="Main">
+        <ul class="flex gap-8 text-sm tracking-[0.2em] uppercase">
+          {
+            nav.map((item) => {
+              const active = item.match(path);
+              return (
+                <li>
+                  <a
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    class:list={[
+                      'pb-1 no-underline transition-colors hover:text-accent-2',
+                      active ? 'border-b-2 border-accent-2 text-text' : 'text-muted',
+                    ]}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              );
+            })
+          }
+        </ul>
+      </nav>
+    </header>
+
+    <main class="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 sm:px-6">
+      <slot />
+    </main>
+
+    <footer class="mt-auto">
+      <Wave />
+      <div class="bg-sand dark:bg-surface">
+        <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-4 py-8 text-sm text-muted sm:px-6">
+          <Ornament class="h-6 w-20" />
+          <div class="flex flex-wrap justify-center gap-x-5 gap-y-1">
+            {site.email && <a href={`mailto:${site.email}`} class="hover:text-accent">Email</a>}
+            {
+              site.instagram && (
+                <a href={site.instagram} class="hover:text-accent" rel="me noopener" target="_blank">
+                  Instagram
+                </a>
+              )
+            }
+            {
+              otherLinks.map((l) => (
+                <a href={l.url} class="hover:text-accent" rel="noopener" target="_blank">
+                  {l.label}
+                </a>
+              ))
+            }
+          </div>
+          <p class="text-center">© {year} {site.name}. All artwork is the property of the artist.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Make casual saving harder: no right-click "Save image" and no dragging images out.
+      // (Long-press saving on phones is blocked in global.css.)
+      const isArt = (t: EventTarget | null) =>
+        t instanceof Element && (t instanceof HTMLImageElement || t.closest('.pswp') !== null);
+      document.addEventListener('contextmenu', (e) => {
+        if (isArt(e.target)) e.preventDefault();
+      });
+      document.addEventListener('dragstart', (e) => {
+        if (isArt(e.target)) e.preventDefault();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+---
+// Home page: featured carousel, then the full gallery.
+// Every image in src/art appears in the gallery automatically.
+import Base from '../layouts/Base.astro';
+import ArtCard from '../components/ArtCard.astro';
+import FeaturedCarousel from '../components/FeaturedCarousel.astro';
+import Lightbox from '../components/Lightbox.astro';
+import Ornament from '../components/Ornament.astro';
+import { getArtworks } from '../lib/artworks';
+import { getImage } from 'astro:assets';
+
+const artworks = await getArtworks();
+const featured = artworks.filter((a) => a.featured);
+const share = artworks[0] ? await getImage({ src: artworks[0].image, width: 1200, format: 'jpg' }) : undefined;
+---
+
+<Base image={share?.src}>
+  <FeaturedCarousel artworks={featured} />
+
+  <section aria-labelledby="gallery-heading">
+    <div class="mb-10 flex flex-col items-center gap-2 text-center">
+      <h2 id="gallery-heading" class="text-3xl font-semibold italic sm:text-4xl">The Gallery</h2>
+      <p class="text-sm tracking-wider text-muted uppercase">{artworks.length} pieces · tap any to view</p>
+      <Ornament class="mt-1 h-6 w-20" />
+    </div>
+    {
+      artworks.length === 0 ? (
+        <p class="py-20 text-center text-muted">No artwork yet. Add images to the src/art folder.</p>
+      ) : (
+        <div id="gallery" class="columns-1 gap-6 sm:columns-2 sm:gap-8 lg:columns-3">
+          {artworks.map((art, i) => (
+            <ArtCard art={art} eager={i < 3 && featured.length === 0} />
+          ))}
+        </div>
+      )
+    }
+  </section>
+  <Lightbox />
+</Base>

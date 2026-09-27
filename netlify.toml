@@ -1,0 +1,22 @@
+# Netlify build settings. Netlify reads this automatically.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "24"
+
+# Tell AI crawlers not to train on anything here (text and data mining opt-out).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noai, noimageai"
+    tdm-reservation = "1"
+
+# Optimised images and scripts have unique names, so browsers can cache them forever.
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    X-Robots-Tag = "noai, noimageai"
+    tdm-reservation = "1"

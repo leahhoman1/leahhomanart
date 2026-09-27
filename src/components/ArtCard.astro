@@ -1,0 +1,67 @@
+---
+// One artwork in the gallery grid: arch-shaped matte, image, and caption.
+// Clicking opens the lightbox (or, without JavaScript, the artwork's own page).
+import { Image, getImage } from 'astro:assets';
+import { formatYear, type Artwork } from '../lib/artworks';
+import site from '../data/site.json';
+
+interface Props {
+  art: Artwork;
+  eager?: boolean;
+}
+
+const { art, eager = false } = Astro.props;
+const big = await getImage({
+  src: art.image,
+  width: Math.min(art.image.width, 1600),
+  format: 'webp',
+});
+const year = formatYear(art.date);
+const caption = [art.title, [art.medium, year].filter(Boolean).join(', '), `© ${site.name}`]
+  .filter(Boolean)
+  .join(' · ');
+---
+
+<figure class="reveal group mb-6 break-inside-avoid sm:mb-8">
+  <a
+    href={`/art/${art.slug}/`}
+    class="pswp-item arch block bg-surface px-4 pt-16 pb-4 no-underline shadow-sm transition duration-300 group-hover:-translate-y-1 group-hover:shadow-lg"
+    data-pswp-src={big.src}
+    data-pswp-width={big.attributes.width}
+    data-pswp-height={big.attributes.height}
+    data-caption={caption}
+    data-details={`/art/${art.slug}/`}
+  >
+    <Image
+      src={art.image}
+      alt={art.title}
+      widths={[400, 700, 1000, 1400]}
+      sizes="(min-width: 1024px) 360px, (min-width: 640px) 45vw, 92vw"
+      loading={eager ? 'eager' : 'lazy'}
+      class="h-auto w-full rounded-sm"
+    />
+  </a>
+  <figcaption class="mt-3 px-2 text-center">
+    <a href={`/art/${art.slug}/`} class="font-display text-lg text-text italic no-underline hover:text-accent-2">
+      {art.title}
+    </a>
+    {
+      (art.medium || year) && (
+        <span class="block text-xs tracking-wider text-muted uppercase">
+          {[art.medium, year].filter(Boolean).join(' · ')}
+        </span>
+      )
+    }
+    {
+      art.hasNotes && (
+        <a
+          href={`/art/${art.slug}/`}
+          class="mt-2 inline-flex items-center gap-1 rounded-full border border-accent-2/40 px-3 py-0.5 text-xs text-accent-2 no-underline transition hover:bg-accent-2 hover:text-page"
+        >
+          ✎ Artist's notes
+        </a>
+      )
+    }
+    {art.sold && <span class="mt-1 block text-xs text-accent-2">● Sold</span>}
+  </figcaption>
+</figure>

@@ -1,0 +1,32 @@
+---
+// Small folk-art flower with leaves (decoration only).
+interface Props {
+  class?: string;
+}
+const { class: className = 'h-8 w-24' } = Astro.props;
+const petals = [0, 60, 120, 180, 240, 300];
+---
+
+<svg class={className} viewBox="0 0 120 40" aria-hidden="true" fill="none">
+  <path d="M8 20 C24 6 40 6 50 20" stroke="var(--color-emerald)" stroke-width="2" stroke-linecap="round"></path>
+  <path d="M112 20 C96 34 80 34 70 20" stroke="var(--color-emerald)" stroke-width="2" stroke-linecap="round"></path>
+  <ellipse cx="26" cy="11" rx="7" ry="3" fill="var(--color-emerald)" transform="rotate(-25 26 11)"></ellipse>
+  <ellipse cx="94" cy="29" rx="7" ry="3" fill="var(--color-emerald)" transform="rotate(-25 94 29)"></ellipse>
+  <g transform="translate(60 20)">
+    {
+      petals.map((r, i) => (
+        <ellipse
+          cx="0"
+          cy="-9"
+          rx="5"
+          ry="9"
+          transform={`rotate(${r})`}
+          fill={i % 2 ? 'var(--color-magenta)' : 'var(--color-terracotta)'}
+        />
+      ))
+    }
+    <circle r="5" fill="var(--color-marigold)"></circle>
+  </g>
+  <circle cx="8" cy="20" r="3" fill="var(--color-marigold)"></circle>
+  <circle cx="112" cy="20" r="3" fill="var(--color-cobalt)"></circle>
+</svg>

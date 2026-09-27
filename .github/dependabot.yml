@@ -1,0 +1,15 @@
+# Once a month, GitHub opens ONE pull request that updates the site's building blocks.
+# Netlify builds a preview of it; if the preview looks fine, merge it.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      all-dependencies:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

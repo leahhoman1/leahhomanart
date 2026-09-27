@@ -1,0 +1,44 @@
+---
+// About page. The text lives in src/content/pages/about.md;
+// contact links come from src/data/site.json.
+import { getEntry, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import site from '../data/site.json';
+
+const entry = await getEntry('pages', 'about');
+if (!entry) throw new Error('Missing src/content/pages/about.md');
+const { Content } = await render(entry);
+---
+
+<Base title={entry.data.title}>
+  <article class="arch mx-auto max-w-2xl bg-surface px-6 pt-20 pb-10 sm:px-12">
+    <h1 class="text-center text-4xl font-semibold italic">{entry.data.title}</h1>
+    <div class="prose-art mt-8 text-lg">
+      <Content />
+    </div>
+    {
+      (site.email || site.instagram) && (
+        <div class="mt-10 flex flex-wrap justify-center gap-4">
+          {site.email && (
+            <a
+              href={`mailto:${site.email}`}
+              class="rounded-full bg-accent px-5 py-2 text-sm text-page no-underline transition hover:bg-accent-2"
+            >
+              Email me
+            </a>
+          )}
+          {site.instagram && (
+            <a
+              href={site.instagram}
+              target="_blank"
+              rel="me noopener"
+              class="rounded-full border-2 border-accent px-5 py-2 text-sm text-accent no-underline transition hover:border-accent-2 hover:text-accent-2"
+            >
+              Instagram
+            </a>
+          )}
+        </div>
+      )
+    }
+  </article>
+</Base>

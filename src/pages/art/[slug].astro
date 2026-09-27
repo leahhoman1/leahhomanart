@@ -1,0 +1,133 @@
+---
+// A page for each artwork, e.g. /art/desert-bloom/ (good for sharing a single piece).
+import type { GetStaticPaths } from 'astro';
+import { Image, getImage } from 'astro:assets';
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Ornament from '../../components/Ornament.astro';
+import { getArtworks, formatYear, type Artwork } from '../../lib/artworks';
+import site from '../../data/site.json';
+
+export const getStaticPaths = (async () => {
+  const artworks = await getArtworks();
+  return artworks.map((art, i) => ({
+    params: { slug: art.slug },
+    props: {
+      art,
+      prev: artworks[i - 1] as Artwork | undefined,
+      next: artworks[i + 1] as Artwork | undefined,
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  art: Artwork;
+  prev?: Artwork;
+  next?: Artwork;
+}
+
+const { art, prev, next } = Astro.props;
+const year = formatYear(art.date);
+const share = await getImage({ src: art.image, width: 1200, format: 'jpg' });
+const details = [
+  ['Year', year],
+  ['Medium', art.medium],
+  ['Size', art.size],
+].filter((d): d is [string, string] => Boolean(d[1]));
+const paragraphs = art.description?.split(/\n\s*\n/).filter(Boolean) ?? [];
+// Artist's notes: the text written below the --- lines in the details file
+const Notes = art.hasNotes && art.entry ? (await render(art.entry)).Content : undefined;
+---
+
+<Base title={art.title} description={art.description ?? `${art.title}, artwork by the artist.`} image={share.src}>
+  <article class="grid items-start gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+    <div class="arch bg-surface px-4 pt-16 pb-4 sm:px-8 sm:pt-20 sm:pb-8">
+      <Image
+        src={art.image}
+        alt={art.title}
+        widths={[600, 1000, 1600]}
+        sizes="(min-width: 1024px) 820px, 92vw"
+        priority
+        class="mx-auto h-auto max-h-[80vh] w-auto rounded-sm object-contain"
+      />
+    </div>
+
+    <div class="lg:sticky lg:top-8">
+      <h1 class="text-4xl leading-tight font-semibold italic">{art.title}</h1>
+      {art.sold && <p class="mt-2 text-sm text-accent-2">● Sold</p>}
+      {
+        details.length > 0 && (
+          <dl class="mt-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+            {details.map(([k, v]) => (
+              <>
+                <dt class="tracking-wider text-muted uppercase">{k}</dt>
+                <dd>{v}</dd>
+              </>
+            ))}
+          </dl>
+        )
+      }
+      {
+        paragraphs.length > 0 && (
+          <div class="prose-art mt-6">
+            {paragraphs.map((p) => (
+              <p>{p}</p>
+            ))}
+          </div>
+        )
+      }
+      {
+        Notes && (
+          <a
+            href="#story"
+            class="mt-6 inline-flex items-center gap-2 rounded-full border-2 border-accent-2 px-5 py-2 text-sm text-accent-2 no-underline transition hover:bg-accent-2 hover:text-page"
+          >
+            ✎ Read the story behind it <span aria-hidden="true">↓</span>
+          </a>
+        )
+      }
+      <Ornament class="mt-8 h-6 w-20" />
+      <p class="mt-4 text-xs leading-relaxed text-muted">
+        © {year ?? new Date().getFullYear()} {site.name}. All rights reserved.<br />
+        Please don't copy, share, sell or use this image (including for AI training) without permission.
+      </p>
+    </div>
+  </article>
+
+  {
+    Notes && (
+      <section id="story" class="mx-auto mt-16 max-w-2xl scroll-mt-8" aria-labelledby="story-heading">
+        <div class="flex flex-col items-center gap-2 text-center">
+          <p class="text-xs tracking-[0.3em] text-accent-2 uppercase">Artist's notes</p>
+          <h2 id="story-heading" class="text-3xl font-semibold italic">The story behind it</h2>
+          <Ornament class="mt-1 h-6 w-20" />
+        </div>
+        <div class="notes prose-art mt-8 font-display text-lg sm:text-xl">
+          <Notes />
+        </div>
+      </section>
+    )
+  }
+
+  <nav class="mt-14 flex items-center justify-between gap-4 border-t border-sand pt-6 text-sm dark:border-surface" aria-label="More artwork">
+    {
+      prev ? (
+        <a href={`/art/${prev.slug}/`} class="no-underline hover:text-accent-2">
+          ← <span class="font-display italic">{prev.title}</span>
+        </a>
+      ) : (
+        <span />
+      )
+    }
+    <a href="/" class="tracking-[0.2em] text-muted uppercase no-underline hover:text-accent-2">Gallery</a>
+    {
+      next ? (
+        <a href={`/art/${next.slug}/`} class="text-right no-underline hover:text-accent-2">
+          <span class="font-display italic">{next.title}</span> →
+        </a>
+      ) : (
+        <span />
+      )
+    }
+  </nav>
+</Base>

@@ -1,0 +1,128 @@
+/*
+  Site-wide styles and colours.
+  Palette: Georgia O'Keeffe's desert (bone, sand, terracotta, sage)
+  with Frida Kahlo's folk-art accents (Casa Azul cobalt, magenta, marigold, emerald).
+  To change a colour, edit the hex value below. Every page updates.
+*/
+@import 'tailwindcss';
+@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/inter';
+
+@theme {
+  /* Fixed palette */
+  --color-bone: #f4ede2;
+  --color-sand: #e6d3b3;
+  --color-terracotta: #b5543a;
+  --color-sage: #8a9a7b;
+  --color-cobalt: #1f4fa3;
+  --color-magenta: #c2185b;
+  --color-marigold: #e8a317;
+  --color-emerald: #1e7a4f;
+  --color-ink: #1c1714;
+
+  /* Theme-aware colours (switch automatically in dark mode, see :root below) */
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+
+  --font-display: 'Fraunces Variable', Georgia, serif;
+  --font-sans: 'Inter Variable', system-ui, sans-serif;
+}
+
+:root {
+  --page: var(--color-bone);
+  --surface: #ebdfc9;
+  --text: #2a211c;
+  --muted: #6e5d50;
+  --accent: var(--color-cobalt);
+  --accent-2: var(--color-magenta);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: var(--color-ink);
+    --surface: #2a221d;
+    --text: #f1e7d8;
+    --muted: #b8a48f;
+    --accent: #7ea4ec;
+    --accent-2: #f06a9f;
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  html {
+    @apply bg-page font-sans text-text antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+    font-variation-settings:
+      'SOFT' 100,
+      'WONK' 1;
+  }
+  a {
+    @apply underline-offset-4;
+  }
+  /* Discourage saving artwork: no dragging, selecting, or phone long-press menu */
+  img {
+    -webkit-user-drag: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+}
+
+/* Simple styling for text written in Markdown (About page, descriptions) */
+.prose-art p {
+  @apply my-4 leading-relaxed;
+}
+.prose-art a {
+  @apply text-accent underline;
+}
+.prose-art h2 {
+  @apply mt-10 mb-3 text-2xl;
+}
+.prose-art ul {
+  @apply my-4 list-disc pl-6;
+}
+
+/* Artist's notes: decorative first letter */
+.notes > p:first-of-type::first-letter {
+  float: left;
+  margin: 0.1em 0.12em 0 0;
+  font-size: 3.4em;
+  line-height: 0.8;
+  font-style: normal;
+  color: var(--color-accent-2);
+}
+
+/* Gallery cards fade up gently as they scroll into view (modern browsers only) */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+}
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+}
+
+/* Arch-topped matte: soft O'Keeffe curves around each piece */
+.arch {
+  /* Use at least pt-16 on .arch elements so image corners stay inside the curve */
+  border-radius: 50% 50% 1.25rem 1.25rem / 5rem 5rem 1.25rem 1.25rem;
+}

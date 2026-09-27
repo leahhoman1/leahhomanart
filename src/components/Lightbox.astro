@@ -1,0 +1,78 @@
+---
+// Full-screen image viewer (PhotoSwipe) for links with class "pswp-item"
+// inside an element with id="gallery". Supports swipe, pinch-zoom and arrow keys.
+---
+
+<script>
+  import PhotoSwipeLightbox from 'photoswipe/lightbox';
+  import 'photoswipe/style.css';
+
+  const lightbox = new PhotoSwipeLightbox({
+    gallery: '#gallery',
+    children: 'a.pswp-item',
+    pswpModule: () => import('photoswipe'),
+    bgOpacity: 0.94,
+    showHideAnimationType: 'fade',
+    // Leave room at the bottom for the caption
+    paddingFn: () => ({ top: 24, bottom: 72, left: 0, right: 0 }),
+  });
+
+  // Caption with the title and a link to the artwork's own page.
+  lightbox.on('uiRegister', () => {
+    lightbox.pswp?.ui?.registerElement({
+      name: 'caption',
+      order: 9,
+      isButton: false,
+      appendTo: 'root',
+      onInit: (el, pswp) => {
+        el.className = 'pswp__art-caption';
+        pswp.on('change', () => {
+          const link = pswp.currSlide?.data.element as HTMLElement | undefined;
+          el.textContent = '';
+          if (!link) return;
+          const text = document.createElement('span');
+          text.textContent = link.dataset.caption ?? '';
+          const more = document.createElement('a');
+          more.href = link.dataset.details ?? '#';
+          more.textContent = 'Details →';
+          el.append(text, more);
+        });
+      },
+    });
+  });
+
+  lightbox.init();
+</script>
+
+<style is:global>
+  .pswp {
+    --pswp-bg: #1c1714;
+  }
+  .pswp__art-caption {
+    position: absolute;
+    left: 50%;
+    bottom: 1rem;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+    max-width: calc(100% - 2rem);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    background: rgb(28 23 20 / 0.75);
+    color: #f1e7d8;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    text-align: center;
+  }
+  .pswp__art-caption a {
+    color: #e8a317;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  .pswp__art-caption a:hover {
+    text-decoration: underline;
+  }
+</style>
